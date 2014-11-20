@@ -36,8 +36,8 @@ Or install it yourself as:
 
 See 
 
-- https://github.com/blueboxsecurity/idevice/tree/master/examples
-- https://github.com/blueboxsecurity/idevice/tree/master/spec
+- https://github.com/emonti/idevice/tree/master/examples
+- https://github.com/emonti/idevice/tree/master/spec
 
 ## Contact
 
@@ -49,7 +49,7 @@ This code is released under the ASF license by Bluebox Security
 ## Issues / Contributing
 
 Please submit pull requests using github.
-Report issues at https://github.com/blueboxsecurity/idevice/issues
+Report issues at https://github.com/emonti/idevice/issues
 
 
 ## License
