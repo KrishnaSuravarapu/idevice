@@ -39,10 +39,12 @@ See
 - https://github.com/blueboxsecurity/idevice/tree/master/examples
 - https://github.com/blueboxsecurity/idevice/tree/master/spec
 
-## Author
+## Contact
 
-Eric Monti - monti@bluebox.com
+Eric Monti - esmonti@gmail.com (Author)
 
+This code is released under the ASF license by Bluebox Security
+- https://www.bluebox.com
 
 ## Issues / Contributing
 
