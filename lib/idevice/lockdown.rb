@@ -127,9 +127,13 @@ module Idevice
       res = nil
       FFI::MemoryPointer.new(:pointer) do |p_val|
         err = C.lockdownd_get_value(self, domain, key, p_val)
-        raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
-
-        res = p_val.read_pointer.read_plist_t
+        if err == :SUCCESS
+            res = p_val.read_pointer.read_plist_t
+        elsif err == :UNKNOWN_ERROR
+            res = nil
+        else
+            raise LockdownError, "Lockdownd error: #{err}"
+        end
       end
       return res
     end
