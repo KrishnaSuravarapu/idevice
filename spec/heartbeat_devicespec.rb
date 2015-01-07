@@ -30,10 +30,10 @@ describe Idevice::HeartbeatClient do
   end
 
   it "should send and receive a heartbeat" do
-    pending "Heartbeat is not working on my test device"
+    skip "Heartbeat is not working on my test device"
     marco = @hb.receive_plist
     marco.should be_a Hash
-    @hb.send_plist("Command" => "Polo").should be_true
+    @hb.send_plist("Command" => "Polo").should == true
   end
 end
 

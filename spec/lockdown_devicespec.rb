@@ -95,7 +95,7 @@ describe Idevice::LockdownClient do
       ldsvc = @lockdown.start_service("com.apple.afc")
       ldsvc.should_not be_nil
       ldsvc[:port].should > 1024
-      [0,1].include?(ldsvc[:ssl_enabled]).should be_true
+      [0,1].include?(ldsvc[:ssl_enabled]).should == true
     end
 
     it "should raise an error starting a nonexistent lockdown service" do

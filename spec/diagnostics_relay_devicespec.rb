@@ -99,22 +99,22 @@ describe Idevice::DiagnosticsRelayClient do
   end
 
   it "should say goodbye to disconnect from the service" do
-    @drc.goodbye.should be_true
+    @drc.goodbye.should == true
     lambda{ @drc.diagnostics }.should raise_error(Idevice::DiagnosticsRelayError)
   end
 
   it "should put a device to sleep" do
-    pending "don't actually put the device to sleep"
+    skip "don't actually put the device to sleep"
     @drc.sleep
   end
 
   it "should restart a device" do
-    pending "don't actually reboot the device"
+    skip "don't actually reboot the device"
     @drc.restart(0) #(with optional flags arg)
   end
 
   it "should shutdown a device" do
-    pending "don't actually shutdown the device"
+    skip "don't actually shutdown the device"
     @drc.shutdown(0) #(with optional flags arg)
   end
 

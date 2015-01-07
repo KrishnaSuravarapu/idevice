@@ -56,7 +56,7 @@ describe Idevice::ImageMounterClient do
   end
 
   it "should hangup" do
-    @imgmounter.hangup.should be_true
+    @imgmounter.hangup.should == true
     lambda{ @imgmounter.lookup_image }.should raise_error(Idevice::ImageMounterError)
   end
 

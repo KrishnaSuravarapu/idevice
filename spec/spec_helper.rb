@@ -31,6 +31,10 @@ $LOAD_PATH << $SPECROOT.join("..", "lib").expand_path
 require 'idevice'
 
 RSpec.configure do |config|
+  config.expect_with :rspec do |c|
+    c.syntax = [:should, :expect]
+  end
+
   def sample_file(filename)
     $SPECROOT.join("samples", filename)
   end

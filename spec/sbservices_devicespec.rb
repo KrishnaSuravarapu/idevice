@@ -36,7 +36,7 @@ describe Idevice::SBSClient do
   end
 
   it "should set the icon state" do
-    pending "dont actually mess with icon state"
+    skip "dont actually mess with icon state"
     @sbs.set_icon_state({"somthing" => 'here'})
   end
 

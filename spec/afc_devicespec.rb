@@ -81,13 +81,13 @@ describe Idevice::AFCClient do
     remotepath='TOTALLYATESTFILECREATEDTEST'
 
     @afc.put_path(@fromfile.to_s, remotepath).should == @fromfile.size
-    @afc.remove_path(remotepath).should be_true
+    @afc.remove_path(remotepath).should == true
   end
 
   it "should remove an (empty) directory path" do
     remotepath='TOTALLYATESTDIRCREATEDTEST'
-    @afc.make_directory(remotepath).should be_true
-    @afc.remove_path(remotepath).should be_true
+    @afc.make_directory(remotepath).should == true
+    @afc.remove_path(remotepath).should == true
   end
 
   it "should rename a file path" do
@@ -97,13 +97,13 @@ describe Idevice::AFCClient do
     begin
       @afc.put_path(@fromfile.to_s, remotepath).should == @fromfile.size
       originfo = @afc.file_info(remotepath)
-      @afc.rename_path(remotepath, renamepath).should be_true
+      @afc.rename_path(remotepath, renamepath).should == true
       lambda{ @afc.file_info(remotepath) }.should raise_error Idevice::AFCError
       info = @afc.file_info(renamepath)
       info.should == originfo
     ensure
       @afc.remove_path(remotepath) rescue nil
-      @afc.remove_path(renamepath).should be_true
+      @afc.remove_path(renamepath).should == true
     end
 
   end
@@ -112,22 +112,22 @@ describe Idevice::AFCClient do
     remotepath = 'TOTALLYATESTDIRCREATEDTEST'
     renamepath = remotepath+'2'
     begin
-      @afc.make_directory(remotepath).should be_true
+      @afc.make_directory(remotepath).should == true
       originfo = @afc.file_info(remotepath)
-      @afc.rename_path(remotepath, renamepath).should be_true
+      @afc.rename_path(remotepath, renamepath).should == true
       lambda{ @afc.file_info(remotepath) }.should raise_error Idevice::AFCError
       info = @afc.file_info(renamepath)
       info.should == originfo
     ensure
       @afc.remove_path(remotepath) rescue nil
-      @afc.remove_path(renamepath).should be_true
+      @afc.remove_path(renamepath).should == true
     end
   end
 
   it "should make a directory" do
     remotepath = 'TOTALLYATESTDIR'
     begin
-      @afc.make_directory(remotepath).should be_true
+      @afc.make_directory(remotepath).should == true
       result = @afc.file_info(remotepath)
       result[:st_ifmt].should == :S_IFDIR
     ensure
@@ -137,7 +137,7 @@ describe Idevice::AFCClient do
 
   it "should make a symbolic link to a directory" do
     begin
-      @afc.symlink('.', 'TOTALLYATESTSYMLINKTOCURRENTDIR').should be_true
+      @afc.symlink('.', 'TOTALLYATESTSYMLINKTOCURRENTDIR').should == true
       result = @afc.file_info('TOTALLYATESTSYMLINKTOCURRENTDIR')
       result[:st_ifmt].should == :S_IFLNK
     ensure
@@ -150,8 +150,8 @@ describe Idevice::AFCClient do
     remotelink = 'TOTEALLYATESTSYMLINK3'
 
     begin
-      @afc.touch(remotefile).should be_true
-      @afc.symlink(remotefile, remotelink).should be_true
+      @afc.touch(remotefile).should == true
+      @afc.symlink(remotefile, remotelink).should == true
       @afc.file_info(remotefile)[:st_ifmt].should == :S_IFREG
       @afc.file_info(remotelink)[:st_ifmt].should == :S_IFLNK
 
@@ -172,8 +172,8 @@ describe Idevice::AFCClient do
     remotelink = 'TOTEALLYATESTHARDLINK'
 
     begin
-      @afc.touch(remotefile).should be_true
-      @afc.hardlink(remotefile, remotelink).should be_true
+      @afc.touch(remotefile).should == true
+      @afc.hardlink(remotefile, remotelink).should == true
       @afc.file_info(remotefile)[:st_ifmt].should == :S_IFREG
       @afc.file_info(remotelink)[:st_ifmt].should == :S_IFREG
 
@@ -212,7 +212,7 @@ describe Idevice::AFCClient do
         gotblock=true
         (0..2).should include(chunksz)
       end.should == @fromfile.size
-      gotblock.should be_true
+      gotblock.should == true
 
       catsize = 0
       catbuf = StringIO.new
@@ -227,7 +227,7 @@ describe Idevice::AFCClient do
 
       catsize.should == @fromfile.size
       catbuf.string.should == @fromfile.read()
-      gotblock.should be_true
+      gotblock.should == true
     ensure
       @afc.remove_path(remotepath) rescue nil
     end
@@ -252,10 +252,10 @@ describe Idevice::AFCClient do
     remotepath = 'TESTFILEUPLOADFORTRUNCATE'
 
     begin
-      (@fromfile.size > 10).should be_true
+      (@fromfile.size > 10).should == true
       @afc.put_path(@fromfile.to_s, remotepath).should == @fromfile.size
       @afc.size(remotepath).should == @fromfile.size
-      @afc.truncate(remotepath, 10).should be_true
+      @afc.truncate(remotepath, 10).should == true
       @afc.size(remotepath).should == 10
     ensure
       @afc.remove_path(remotepath) rescue nil
@@ -281,7 +281,7 @@ describe Idevice::AFCClient do
   it "should touch a file" do
     remotefile = "TESTFILETOUCH"
     begin
-      @afc.touch(remotefile).should be_true
+      @afc.touch(remotefile).should == true
       @afc.cat(remotefile).should == ""
       @afc.ctime(remotefile).should == @afc.mtime(remotefile)
     ensure
@@ -293,11 +293,11 @@ describe Idevice::AFCClient do
     remotefile = "TESTINGFILETIMESETTING"
     settime = Time.parse("June 29, 2007 4:20 UTC")
     begin
-      @afc.touch(remotefile).should be_true
+      @afc.touch(remotefile).should == true
       @afc.ctime(remotefile).should_not == settime
       @afc.mtime(remotefile).should_not == settime
 
-      @afc.set_file_time(remotefile, settime).should be_true
+      @afc.set_file_time(remotefile, settime).should == true
       @afc.ctime(remotefile).should == settime
       @afc.mtime(remotefile).should == settime
     ensure

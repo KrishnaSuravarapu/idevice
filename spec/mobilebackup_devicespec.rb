@@ -35,7 +35,7 @@ if ENV["TEST_MOBILEBACKUP1"]
     end
 
     it "needs functional tests" do
-      pending "writing more specs for MobileBackupClient"
+      skip "writing more specs for MobileBackupClient"
     end
   end
 end
