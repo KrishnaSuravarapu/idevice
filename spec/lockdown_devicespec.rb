@@ -78,19 +78,16 @@ describe Idevice::LockdownClient do
 
     it "should not get a value for nil:BogusKey" do
       lambda {
-          @lockdown.get_value(nil, "BogusKey")
-      }.should raise_exception(Idevice::LockdownError)
+          @lockdown.get_value(nil, "BogusKey") }.should raise_exception(Idevice::LockdownError)
     end
 
     it "should get an empty hash for BogusDomain" do
-      lambda {
-        @lockdown.get_value("BogusDomain", nil)
-      }.should raise_exception(Idevice::LockdownError)
+      result = @lockdown.get_value("BogusDomain", nil)
+      result.should == {}
     end
 
     it "should not get a value for BogusDomain:UniqueDeviceID" do
-      result = @lockdown.get_value("BogusDomain", "UniqueDeviceID")
-      result.should be_nil
+      lambda { @lockdown.get_value("BogusDomain", "UniqueDeviceID") }.should raise_error Idevice::LockdownError
     end
 
     it "should start an 'afc' lockdown service" do
