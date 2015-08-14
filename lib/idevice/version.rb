@@ -1,3 +1,3 @@
 module Idevice
-  VERSION = "1.1.7.0"
+  VERSION = "1.2.0.0"
 end
