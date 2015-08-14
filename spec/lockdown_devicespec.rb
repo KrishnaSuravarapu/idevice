@@ -77,13 +77,15 @@ describe Idevice::LockdownClient do
     end
 
     it "should not get a value for nil:BogusKey" do
-      result = @lockdown.get_value(nil, "BogusKey")
-      result.should be_nil
+      lambda {
+          @lockdown.get_value(nil, "BogusKey")
+      }.should raise_exception(Idevice::LockdownError)
     end
 
     it "should get an empty hash for BogusDomain" do
-      result = @lockdown.get_value("BogusDomain", nil)
-      result.should == {}
+      lambda {
+        @lockdown.get_value("BogusDomain", nil)
+      }.should raise_exception(Idevice::LockdownError)
     end
 
     it "should not get a value for BogusDomain:UniqueDeviceID" do
