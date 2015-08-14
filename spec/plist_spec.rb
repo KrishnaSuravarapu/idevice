@@ -138,13 +138,15 @@ describe Plist do
     val.should == 0xdeadbeef
   end
 
-  it "should convert a negative number to an unsigned 64-bit int" do
-    ptr = Idevice::Plist_t.from_ruby(-2)
-    ptr.should be_a FFI::Pointer
-    ptr.should_not be_null
-    val = ptr.to_ruby
-    val.should == 0xfffffffffffffffe
-  end
+  ### Deprecated this behavior check.
+  ### this was an older behavior that is now fixed
+#  it "should convert a negative number to an unsigned 64-bit int" do
+#    ptr = Idevice::Plist_t.from_ruby(-2)
+#    ptr.should be_a FFI::Pointer
+#    ptr.should_not be_null
+#    val = ptr.to_ruby
+#    val.should == 0xfffffffffffffffe
+#  end
 
   it "should convert a plist pointer from and to an unsigned int using from_ruby" do
     ptr = Idevice::Plist_t.from_ruby(0xdeadbeef)
