@@ -173,6 +173,26 @@ module Idevice
       end
       return recvdata.string
     end
+
+    def send_lockdown_message(msg)
+        dat = msg.to_plist
+        send_data([dat.bytesize].pack("N") << dat)
+    end
+
+    def receive_lockdown_message
+        len = receive_data(4).unpack("N").first
+        dat = receive_data(len)
+        case dat[0,6]
+        when "<?xml "
+            return Plist.parse_xml(dat)
+        when "bplist"
+            return Plist.parse_binary(dat)
+        else
+            # just return raw data if this appears as something else
+            return dat
+        end
+    end
+
   end
 
   module C
