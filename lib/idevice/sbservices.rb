@@ -40,13 +40,14 @@ module Idevice
       end
     end
 
-    def self.attach(opts={})
+    def self.attach(opts = {})
       _attach_helper("com.apple.springboardservices", opts) do |idevice, ldsvc, p_sbs|
         err = C.sbservices_client_new(idevice, ldsvc, p_sbs)
         raise SbservicesError, "Springboard Services Error: #{err}" if err != :SUCCESS
 
         sbs = p_sbs.read_pointer
         raise SBSError, "sbservices_client_new returned a NULL client" if sbs.null?
+
         return new(sbs)
       end
     end
@@ -55,6 +56,7 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |p_state|
         err = C.sbservices_get_icon_state(self, p_state, nil)
         raise SbservicesError, "Springboard Services Error: #{err}" if err != :SUCCESS
+
         return p_state.read_pointer.read_plist_t
       end
     end
@@ -74,7 +76,7 @@ module Idevice
 
           pngdata = p_pngdata.read_pointer
           unless pngdata.null?
-            ret=pngdata.read_bytes(p_pngsize.read_uint64)
+            ret = pngdata.read_bytes(p_pngsize.read_uint64)
             C.free(pngdata)
             return ret
           end
@@ -108,49 +110,47 @@ module Idevice
 
           pngdata = p_pngdata.read_pointer
           unless pngdata.null?
-            ret=pngdata.read_bytes(p_pngsize.read_uint64)
+            ret = pngdata.read_bytes(p_pngsize.read_uint64)
             C.free(pngdata)
             return ret
           end
         end
       end
     end
-
   end
 
   SBSClient = SbservicesClient
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS      ,         0,
-      :INVALID_ARG  ,        -1,
-      :PLIST_ERROR  ,        -2,
-      :CONN_FAILED  ,        -3,
-      :UNKNOWN_ERROR,      -256,
+      :SUCCESS, 0,
+      :INVALID_ARG,        -1,
+      :PLIST_ERROR,        -2,
+      :CONN_FAILED,        -3,
+      :UNKNOWN_ERROR, -256,
     ), :sbservices_error_t
 
-    #sbservices_error_t sbservices_client_new(idevice_t device, lockdownd_service_descriptor_t service, sbservices_client_t *client);
+    # sbservices_error_t sbservices_client_new(idevice_t device, lockdownd_service_descriptor_t service, sbservices_client_t *client);
     attach_function :sbservices_client_new, [Idevice, LockdownServiceDescriptor, :pointer], :sbservices_error_t
 
-    #sbservices_error_t sbservices_client_free(sbservices_client_t client);
+    # sbservices_error_t sbservices_client_free(sbservices_client_t client);
     attach_function :sbservices_client_free, [SBSClient], :sbservices_error_t
 
-    #sbservices_error_t sbservices_get_icon_state(sbservices_client_t client, plist_t *state, const char *format_version);
+    # sbservices_error_t sbservices_get_icon_state(sbservices_client_t client, plist_t *state, const char *format_version);
     attach_function :sbservices_get_icon_state, [SBSClient, :pointer, :string], :sbservices_error_t
 
-    #sbservices_error_t sbservices_set_icon_state(sbservices_client_t client, plist_t newstate);
+    # sbservices_error_t sbservices_set_icon_state(sbservices_client_t client, plist_t newstate);
     attach_function :sbservices_set_icon_state, [SBSClient, Plist_t], :sbservices_error_t
 
-    #sbservices_error_t sbservices_get_icon_pngdata(sbservices_client_t client, const char *bundleId, char **pngdata, uint64_t *pngsize);
+    # sbservices_error_t sbservices_get_icon_pngdata(sbservices_client_t client, const char *bundleId, char **pngdata, uint64_t *pngsize);
     attach_function :sbservices_get_icon_pngdata, [SBSClient, :string, :pointer, :pointer], :sbservices_error_t
 
-    #sbservices_error_t sbservices_get_interface_orientation(sbservices_client_t client, sbservices_interface_orientation_t* interface_orientation);
+    # sbservices_error_t sbservices_get_interface_orientation(sbservices_client_t client, sbservices_interface_orientation_t* interface_orientation);
     attach_function :sbservices_get_interface_orientation, [SBSClient, :pointer], :sbservices_error_t
 
-    #sbservices_error_t sbservices_get_home_screen_wallpaper_pngdata(sbservices_client_t client, char **pngdata, uint64_t *pngsize);
+    # sbservices_error_t sbservices_get_home_screen_wallpaper_pngdata(sbservices_client_t client, char **pngdata, uint64_t *pngsize);
     attach_function :sbservices_get_home_screen_wallpaper_pngdata, [SBSClient, :pointer, :pointer], :sbservices_error_t
-
   end
 end

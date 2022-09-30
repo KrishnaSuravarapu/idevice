@@ -23,7 +23,6 @@ require 'idevice/idevice'
 require 'idevice/lockdown'
 
 module Idevice
-
   class ScreenShotrError < IdeviceLibError
   end
 
@@ -38,7 +37,7 @@ module Idevice
       end
     end
 
-    def self.attach(opts={})
+    def self.attach(opts = {})
       _attach_helper("com.apple.mobile.screenshotr", opts) do |idevice, ldsvc, p_ss|
         err = C.screenshotr_client_new(idevice, ldsvc, p_ss)
         raise ScreenShotrError, "ScreenShotr Error: #{err}" if err != :SUCCESS
@@ -57,7 +56,7 @@ module Idevice
 
           imgdata = p_imgdata.read_pointer
           unless imgdata.null?
-            ret=imgdata.read_bytes(p_imgsize.read_uint64)
+            ret = imgdata.read_bytes(p_imgsize.read_uint64)
             C.free(imgdata)
             return ret
           end
@@ -67,26 +66,24 @@ module Idevice
   end
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS      ,         0,
-      :INVALID_ARG  ,        -1,
-      :PLIST_ERROR  ,        -2,
-      :MUX_ERROR    ,        -3,
-      :BAD_VERSION  ,        -4,
-      :UNKNOWN_ERROR,      -256,
+      :SUCCESS, 0,
+      :INVALID_ARG,        -1,
+      :PLIST_ERROR,        -2,
+      :MUX_ERROR, -3,
+      :BAD_VERSION, -4,
+      :UNKNOWN_ERROR, -256,
     ), :screenshotr_error_t
 
-    #screenshotr_error_t screenshotr_client_new(idevice_t device, lockdownd_service_descriptor_t service, screenshotr_client_t * client);
+    # screenshotr_error_t screenshotr_client_new(idevice_t device, lockdownd_service_descriptor_t service, screenshotr_client_t * client);
     attach_function :screenshotr_client_new, [Idevice, LockdownServiceDescriptor, :pointer], :screenshotr_error_t
 
-    #screenshotr_error_t screenshotr_client_free(screenshotr_client_t client);
+    # screenshotr_error_t screenshotr_client_free(screenshotr_client_t client);
     attach_function :screenshotr_client_free, [ScreenShotrClient], :screenshotr_error_t
 
-    #screenshotr_error_t screenshotr_take_screenshot(screenshotr_client_t client, char **imgdata, uint64_t *imgsize);
+    # screenshotr_error_t screenshotr_take_screenshot(screenshotr_client_t client, char **imgdata, uint64_t *imgsize);
     attach_function :screenshotr_take_screenshot, [ScreenShotrClient, :pointer, :pointer], :screenshotr_error_t
-
   end
 end
-

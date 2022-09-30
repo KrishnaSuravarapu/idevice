@@ -37,7 +37,7 @@ module Idevice
       end
     end
 
-    def self.attach(opts={})
+    def self.attach(opts = {})
       idevice = opts[:idevice] || Idevice.attach(opts)
       label = opts[:label] || "ruby-idevice"
 
@@ -47,6 +47,7 @@ module Idevice
 
         rc = p_rc.read_pointer
         raise NPError, "restore_client_new returned a NULL client" if rc.null?
+
         return new(rc)
       end
     end
@@ -66,6 +67,7 @@ module Idevice
 
           type = p_type.read_pointer
           raise RestoreErrror, "restored_query_type returned a null type" if type.null?
+
           result = {
             type: type.read_string,
             version: p_vers.read_uint64,
@@ -89,6 +91,7 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |p_value|
         err = C.restored_get_value(self, key, p_value)
         raise RestoreErrror, "Restore Error: #{err}" if err != :SUCCESS
+
         return p_value.read_pointer.read_plist_t
       end
     end
@@ -96,18 +99,18 @@ module Idevice
     def send_plist(dict)
       err = C.restored_send(self, Plist_t.from_ruby(hash))
       raise RestoreErrror, "Restore Error: #{err}" if err != :SUCCESS
-
     end
 
     def receive_plist
       FFI::MemoryPointer.new(:pointer) do |p_value|
         err = C.restored_receive(self, p_value)
         raise RestoreErrror, "Restore Error: #{err}" if err != :SUCCESS
+
         return p_value.read_pointer.read_plist_t
       end
     end
 
-    def start_restore(version, options={})
+    def start_restore(version, options = {})
       err = C.restored_start_restore(self, Plist_t.from_ruby(options), version)
       raise RestoreErrror, "Restore Error: #{err}" if err != :SUCCESS
 
@@ -125,56 +128,54 @@ module Idevice
       C.restored_client_set_label(self, label)
       return true
     end
-
   end
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS             ,       0,
-      :INVALID_ARG         ,      -1,
-      :INVALID_CONF        ,      -2,
-      :PLIST_ERROR         ,      -3,
-      :DICT_ERROR          ,      -4,
-      :NOT_ENOUGH_DATA     ,      -5,
-      :MUX_ERROR           ,      -6,
-      :START_RESTORE_FAILED,      -7,
-      :UNKNOWN_ERROR       ,    -256,
+      :SUCCESS, 0,
+      :INVALID_ARG, -1,
+      :INVALID_CONF, -2,
+      :PLIST_ERROR, -3,
+      :DICT_ERROR, -4,
+      :NOT_ENOUGH_DATA, -5,
+      :MUX_ERROR, -6,
+      :START_RESTORE_FAILED, -7,
+      :UNKNOWN_ERROR, -256,
     ), :restored_error_t
 
-    #restored_error_t restored_client_new(idevice_t device, restored_client_t *client, const char *label);
+    # restored_error_t restored_client_new(idevice_t device, restored_client_t *client, const char *label);
     attach_function :restored_client_new, [Idevice, :pointer, :string], :restored_error_t
 
-    #restored_error_t restored_client_free(restored_client_t client);
+    # restored_error_t restored_client_free(restored_client_t client);
     attach_function :restored_client_free, [RestoreClient], :restored_error_t
 
-    #restored_error_t restored_query_type(restored_client_t client, char **type, uint64_t *version);
+    # restored_error_t restored_query_type(restored_client_t client, char **type, uint64_t *version);
     attach_function :restored_query_type, [RestoreClient, :pointer, :pointer], :restored_error_t
 
-    #restored_error_t restored_query_value(restored_client_t client, const char *key, plist_t *value);
+    # restored_error_t restored_query_value(restored_client_t client, const char *key, plist_t *value);
     attach_function :restored_query_value, [RestoreClient, :string, :pointer], :restored_error_t
 
-    #restored_error_t restored_get_value(restored_client_t client, const char *key, plist_t *value) ;
+    # restored_error_t restored_get_value(restored_client_t client, const char *key, plist_t *value) ;
     attach_function :restored_get_value, [RestoreClient, :string, :pointer], :restored_error_t
 
-    #restored_error_t restored_send(restored_client_t client, plist_t plist);
+    # restored_error_t restored_send(restored_client_t client, plist_t plist);
     attach_function :restored_send, [RestoreClient, Plist_t], :restored_error_t
 
-    #restored_error_t restored_receive(restored_client_t client, plist_t *plist);
+    # restored_error_t restored_receive(restored_client_t client, plist_t *plist);
     attach_function :restored_receive, [RestoreClient, :pointer], :restored_error_t
 
-    #restored_error_t restored_goodbye(restored_client_t client);
+    # restored_error_t restored_goodbye(restored_client_t client);
     attach_function :restored_goodbye, [RestoreClient], :restored_error_t
 
-    #restored_error_t restored_start_restore(restored_client_t client, plist_t options, uint64_t version);
+    # restored_error_t restored_start_restore(restored_client_t client, plist_t options, uint64_t version);
     attach_function :restored_start_restore, [RestoreClient, Plist_t, :uint64], :restored_error_t
 
-    #restored_error_t restored_reboot(restored_client_t client);
+    # restored_error_t restored_reboot(restored_client_t client);
     attach_function :restored_reboot, [RestoreClient], :restored_error_t
 
-    #void restored_client_set_label(restored_client_t client, const char *label);
+    # void restored_client_set_label(restored_client_t client, const char *label);
     attach_function :restored_client_set_label, [RestoreClient, :string], :void
-
   end
 end

@@ -23,7 +23,6 @@ require 'idevice/plist'
 require 'idevice/idevice'
 require 'idevice/lockdown'
 
-
 module Idevice
   class ImageMounterError < IdeviceLibError
   end
@@ -40,23 +39,24 @@ module Idevice
       end
     end
 
-    def self.attach(opts={})
+    def self.attach(opts = {})
       _attach_helper("com.apple.mobile.mobile_image_mounter", opts) do |idevice, ldsvc, p_mim|
         err = C.mobile_image_mounter_new(idevice, ldsvc, p_mim)
         raise ImageMounterError, "ImageMounter error: #{err}" if err != :SUCCESS
 
         mim = p_mim.read_pointer
         raise ImageMounterError, "mobile_image_mounter_new returned a NULL client" if mim.null?
+
         return new(mim)
       end
     end
 
-    def is_mounted?(image_type="Developer")
+    def is_mounted?(image_type = "Developer")
       ret = lookup_image(image_type)
       return (ret["ImagePresent"] == true)
     end
 
-    def lookup_image(image_type="Developer")
+    def lookup_image(image_type = "Developer")
       FFI::MemoryPointer.new(:pointer) do |p_result|
         err = C.mobile_image_mounter_lookup_image(self, image_type, p_result)
         raise ImageMounterError, "ImageMounter error: #{err}" if err != :SUCCESS
@@ -68,7 +68,7 @@ module Idevice
       end
     end
 
-    def mount_image(path, signature, image_type="Developer")
+    def mount_image(path, signature, image_type = "Developer")
       signature = signature.dup.force_encoding('binary')
       FFI::MemoryPointer.from_bytes(signature) do |p_signature|
         FFI::MemoryPointer.new(:pointer) do |p_result|
@@ -92,30 +92,30 @@ module Idevice
   end
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS      ,          0,
-      :INVALID_ARG  ,         -1,
-      :PLIST_ERROR  ,         -2,
-      :CONN_FAILED  ,         -3,
-      :UNKNOWN_ERROR,       -256,
+      :SUCCESS, 0,
+      :INVALID_ARG,         -1,
+      :PLIST_ERROR,         -2,
+      :CONN_FAILED,         -3,
+      :UNKNOWN_ERROR, -256,
     ), :image_mounter_error_t
 
-    #mobile_image_mounter_error_t mobile_image_mounter_new(idevice_t device, lockdownd_service_descriptor_t service, mobile_image_mounter_client_t *client);
+    # mobile_image_mounter_error_t mobile_image_mounter_new(idevice_t device, lockdownd_service_descriptor_t service, mobile_image_mounter_client_t *client);
     attach_function :mobile_image_mounter_new, [Idevice, LockdownServiceDescriptor, :pointer], :image_mounter_error_t
 
-    #mobile_image_mounter_error_t mobile_image_mounter_free(mobile_image_mounter_client_t client);
+    # mobile_image_mounter_error_t mobile_image_mounter_free(mobile_image_mounter_client_t client);
     attach_function :mobile_image_mounter_free, [ImageMounterClient], :image_mounter_error_t
 
-    #mobile_image_mounter_error_t mobile_image_mounter_lookup_image(mobile_image_mounter_client_t client, const char *image_type, plist_t *result);
+    # mobile_image_mounter_error_t mobile_image_mounter_lookup_image(mobile_image_mounter_client_t client, const char *image_type, plist_t *result);
     attach_function :mobile_image_mounter_lookup_image, [ImageMounterClient, :string, :pointer], :image_mounter_error_t
 
-    #mobile_image_mounter_error_t mobile_image_mounter_mount_image(mobile_image_mounter_client_t client, const char *image_path, const char *image_signature, uint16_t signature_length, const char *image_type, plist_t *result);
-    attach_function :mobile_image_mounter_mount_image, [ImageMounterClient, :string, :pointer, :uint16, :string, :pointer], :image_mounter_error_t
+    # mobile_image_mounter_error_t mobile_image_mounter_mount_image(mobile_image_mounter_client_t client, const char *image_path, const char *image_signature, uint16_t signature_length, const char *image_type, plist_t *result);
+    attach_function :mobile_image_mounter_mount_image,
+                    [ImageMounterClient, :string, :pointer, :uint16, :string, :pointer], :image_mounter_error_t
 
-    #mobile_image_mounter_error_t mobile_image_mounter_hangup(mobile_image_mounter_client_t client);
+    # mobile_image_mounter_error_t mobile_image_mounter_hangup(mobile_image_mounter_client_t client);
     attach_function :mobile_image_mounter_hangup, [ImageMounterClient], :image_mounter_error_t
-
   end
 end

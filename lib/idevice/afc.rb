@@ -41,7 +41,7 @@ module Idevice
       end
     end
 
-    def self.attach(opts={})
+    def self.attach(opts = {})
       if opts[:appid]
         return HouseArrestClient.attach(opts).afc_client_for_container(opts[:appid])
 
@@ -61,12 +61,13 @@ module Idevice
 
           afc = p_afc.read_pointer
           raise AFCError, "afc_client_new returned a NULL afc_client_t pointer" if afc.null?
+
           return new(afc)
         end
       end
     end
 
-    def device_info(key=nil)
+    def device_info(key = nil)
       ret = nil
       if key
         FFI::MemoryPointer.new(:pointer) do |p_value|
@@ -83,21 +84,24 @@ module Idevice
         FFI::MemoryPointer.new(:pointer) do |p_infos|
           err = C.afc_get_device_info(self, p_infos)
           raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
           ret = _infolist_to_hash(p_infos)
         end
       end
       return ret
     end
 
-    def read_directory(path='.')
+    def read_directory(path = '.')
       ret = nil
       FFI::MemoryPointer.new(:pointer) do |p_dirlist|
         err = C.afc_read_directory(self, path, p_dirlist)
         raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
         ret = _unbound_list_to_array(p_dirlist)
       end
 
       raise AFCError, "afc_read_directory returned a null directory list for path: #{path}" if ret.nil?
+
       return ret
     end
     alias :ls :read_directory
@@ -107,6 +111,7 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |p_fileinfo|
         err = C.afc_get_file_info(self, path, p_fileinfo)
         raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
         ret = _infolist_to_hash(p_fileinfo)
 
         # convert string values to something more useful
@@ -121,18 +126,20 @@ module Idevice
         end
       end
       raise AFCError, "afc_get_file_info returned null info for path: #{path}" if ret.nil?
+
       return ret
     end
     alias :stat :file_info
 
     def touch(path)
-      open(path, 'a'){ }
+      open(path, 'a') {}
       return true
     end
 
     def make_directory(path)
       err = C.afc_make_directory(self, path)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
     alias :mkdir :make_directory
@@ -140,6 +147,7 @@ module Idevice
     def symlink(from, to)
       err = C.afc_make_link(self, :SYMLINK, from, to)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
     alias :ln_s :symlink
@@ -147,6 +155,7 @@ module Idevice
     def hardlink(from, to)
       err = C.afc_make_link(self, :HARDLINK, from, to)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
     alias :ln :hardlink
@@ -154,6 +163,7 @@ module Idevice
     def rename_path(from, to)
       err = C.afc_rename_path(self, from, to)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
     alias :mv :rename_path
@@ -161,6 +171,7 @@ module Idevice
     def remove_path(path)
       err = C.afc_remove_path(self, path)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
     alias :rm :remove_path
@@ -168,10 +179,11 @@ module Idevice
     def truncate(path, size)
       err = C.afc_truncate(self, path, size)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
 
-    def cat(path, chunksz=nil, &block)
+    def cat(path, chunksz = nil, &block)
       AFCFile.open(self, path, 'r') { |f| return f.read_all(chunksz, &block) }
     end
 
@@ -195,7 +207,7 @@ module Idevice
     # for the top-level directory.
     # opts are passed as-is back to put_path (allowing :chunksize or other options to be set).
     # opts[:recurse] will be ignored.
-    def put_recursively(frompath, topath, opts={})
+    def put_recursively(frompath, topath, opts = {})
       frompath = Pathname(frompath)
       opts = opts.dup
       opts.delete(:recurse)
@@ -225,7 +237,7 @@ module Idevice
     # supported options:
     #   chunksize:   (Integer) chunksize for file transfer
     #   recurse:     (Boolean) if true, will recursively transfer using put_recursively
-    def put_path(frompath, topath, opts={})
+    def put_path(frompath, topath, opts = {})
       opts = opts.dup
       chunksz = opts[:chunksize] || AFC_DEFAULT_CHUNKSIZE
       recurse = opts.delete(:recurse)
@@ -233,7 +245,8 @@ module Idevice
       return put_recursively(frompath, topath, opts) if recurse
 
       if File.directory?(frompath)
-        raise ArgumentError, "#{frompath.inspect} is a directory and can only be put on the device using the 'recurse: true' option)"
+        raise ArgumentError,
+              "#{frompath.inspect} is a directory and can only be put on the device using the 'recurse: true' option)"
       end
 
       wlen = 0
@@ -243,7 +256,7 @@ module Idevice
           while chunk = from.read(chunksz)
             to.write(chunk)
             yield chunk.size if block_given?
-            wlen+=chunk.size
+            wlen += chunk.size
           end
         end
       end
@@ -251,7 +264,7 @@ module Idevice
       return wlen
     end
 
-    def get_path(frompath, topath, chunksz=nil)
+    def get_path(frompath, topath, chunksz = nil)
       wlen = 0
       AFCFile.open(self, frompath, 'r') do |from|
         File.open(topath, 'w') do |to|
@@ -276,14 +289,16 @@ module Idevice
              end
       err = C.afc_set_file_time(self, path, tval)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
 
-    def open(path, mode=nil, &block)
-      AFCFile.open(self,path,mode,&block)
+    def open(path, mode = nil, &block)
+      AFCFile.open(self, path, mode, &block)
     end
 
     private
+
     def _afctime_to_time(timestr)
       # using DateTime to ensure handling as UTC
       DateTime.strptime(timestr[0..-10], "%s").to_time
@@ -298,11 +313,11 @@ module Idevice
   AFC = AFCClient
 
   class AFCFile
-    def self.open(afcclient, path, mode=:RDONLY)
+    def self.open(afcclient, path, mode = :RDONLY)
       m = case mode
           when Symbol
             mode
-          when 'r',nil
+          when 'r', nil
             :RDONLY
           when 'r+'
             :RW
@@ -318,10 +333,11 @@ module Idevice
             raise ArgumentError, "invalid file mode: #{mode.inspect}"
           end
 
-      afcfile=nil
+      afcfile = nil
       FFI::MemoryPointer.new(:uint64) do |p_handle|
-        err =C.afc_file_open(afcclient, path, m, p_handle)
+        err = C.afc_file_open(afcclient, path, m, p_handle)
         raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
         afcfile = new(afcclient, p_handle.read_uint64)
       end
 
@@ -341,6 +357,7 @@ module Idevice
     def close
       err = C.afc_file_close(@afcclient, @handle)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       @closed = true
     end
 
@@ -355,6 +372,7 @@ module Idevice
     def lock(op)
       err = C.afc_file_lock(@afcclient, @handle, op)
       raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
       return true
     end
 
@@ -367,6 +385,7 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |p_pos|
         err = C.afc_file_tell(@afcclient, @handle, p_pos)
         raise AFCError, "AFC error: #{err}" if err != :SUCCESS
+
         return p_pos.read_uint16
       end
     end
@@ -377,15 +396,15 @@ module Idevice
     end
 
     def rewind
-      self.pos=0
+      self.pos = 0
     end
 
-    def read_all(chunksz=nil)
+    def read_all(chunksz = nil)
       chunksz ||= AFC_DEFAULT_CHUNKSIZE
       ret = nil
       FFI::MemoryPointer.new(chunksz) do |buf|
         FFI::MemoryPointer.new(:uint32) do |p_rlen|
-          while (err=C.afc_file_read(@afcclient, @handle, buf, buf.size, p_rlen)) == :SUCCESS
+          while (err = C.afc_file_read(@afcclient, @handle, buf, buf.size, p_rlen)) == :SUCCESS
             rlen = p_rlen.read_uint32
             chunk = buf.read_bytes(rlen)
             if block_given?
@@ -403,14 +422,14 @@ module Idevice
       return ret.string unless ret.nil?
     end
 
-    def read(len=nil, &block)
+    def read(len = nil, &block)
       return read_all(nil, &block) if len.nil?
 
       ret = nil
 
       FFI::MemoryPointer.new(len) do |buf|
         FFI::MemoryPointer.new(:uint32) do |p_rlen|
-          while (err=C.afc_file_read(@afcclient, @handle, buf, len, p_rlen)) == :SUCCESS
+          while (err = C.afc_file_read(@afcclient, @handle, buf, len, p_rlen)) == :SUCCESS
             rlen = p_rlen.read_uint32
             ret ||= StringIO.new
             ret << buf.read_bytes(rlen)
@@ -440,56 +459,54 @@ module Idevice
       end
       return bytes_written
     end
-
   end
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS              ,   0,
-      :UNKNOWN_ERROR        ,   1,
-      :OP_HEADER_INVALID    ,   2,
-      :NO_RESOURCES         ,   3,
-      :READ_ERROR           ,   4,
-      :WRITE_ERROR          ,   5,
-      :UNKNOWN_PACKET_TYPE  ,   6,
-      :INVALID_ARG          ,   7,
-      :OBJECT_NOT_FOUND     ,   8,
-      :OBJECT_IS_DIR        ,   9,
-      :PERM_DENIED          ,  10,
-      :SERVICE_NOT_CONNECTED,  11,
-      :OP_TIMEOUT           ,  12,
-      :TOO_MUCH_DATA        ,  13,
-      :END_OF_DATA          ,  14,
-      :OP_NOT_SUPPORTED     ,  15,
-      :OBJECT_EXISTS        ,  16,
-      :OBJECT_BUSY          ,  17,
-      :NO_SPACE_LEFT        ,  18,
-      :OP_WOULD_BLOCK       ,  19,
-      :IO_ERROR             ,  20,
-      :OP_INTERRUPTED       ,  21,
-      :OP_IN_PROGRESS       ,  22,
-      :INTERNAL_ERROR       ,  23,
-
-      :MUX_ERROR            ,  30,
-      :NO_MEM               ,  31,
-      :NOT_ENOUGH_DATA      ,  32,
-      :DIR_NOT_EMPTY        ,  33,
+      :SUCCESS, 0,
+      :UNKNOWN_ERROR, 1,
+      :OP_HEADER_INVALID, 2,
+      :NO_RESOURCES, 3,
+      :READ_ERROR, 4,
+      :WRITE_ERROR, 5,
+      :UNKNOWN_PACKET_TYPE, 6,
+      :INVALID_ARG, 7,
+      :OBJECT_NOT_FOUND, 8,
+      :OBJECT_IS_DIR, 9,
+      :PERM_DENIED, 10,
+      :SERVICE_NOT_CONNECTED, 11,
+      :OP_TIMEOUT, 12,
+      :TOO_MUCH_DATA, 13,
+      :END_OF_DATA, 14,
+      :OP_NOT_SUPPORTED, 15,
+      :OBJECT_EXISTS, 16,
+      :OBJECT_BUSY, 17,
+      :NO_SPACE_LEFT, 18,
+      :OP_WOULD_BLOCK, 19,
+      :IO_ERROR, 20,
+      :OP_INTERRUPTED,  21,
+      :OP_IN_PROGRESS,  22,
+      :INTERNAL_ERROR,  23,
+      :MUX_ERROR, 30,
+      :NO_MEM, 31,
+      :NOT_ENOUGH_DATA, 32,
+      :DIR_NOT_EMPTY, 33,
     ), :afc_error_t
 
     typedef enum(
-      :RDONLY   , 0x00000001, # r   O_RDONLY
-      :RW       , 0x00000002, # r+  O_RDWR   | O_CREAT
-      :WRONLY   , 0x00000003, # w   O_WRONLY | O_CREAT  | O_TRUNC
-      :WR       , 0x00000004, # w+  O_RDWR   | O_CREAT  | O_TRUNC
-      :APPEND   , 0x00000005, # a   O_WRONLY | O_APPEND | O_CREAT
-      :RDAPPEND , 0x00000006,  # a+  O_RDWR   | O_APPEND | O_CREAT
+      :RDONLY, 0x00000001, # r   O_RDONLY
+      :RW, 0x00000002, # r+  O_RDWR   | O_CREAT
+      :WRONLY, 0x00000003, # w   O_WRONLY | O_CREAT  | O_TRUNC
+      :WR, 0x00000004, # w+  O_RDWR   | O_CREAT  | O_TRUNC
+      :APPEND, 0x00000005, # a   O_WRONLY | O_APPEND | O_CREAT
+      :RDAPPEND, 0x00000006, # a+  O_RDWR   | O_APPEND | O_CREAT
     ), :afc_file_mode_t
 
     typedef enum(
-      :HARDLINK , 1,
-      :SYMLINK , 2,
+      :HARDLINK, 1,
+      :SYMLINK, 2,
     ), :afc_link_type_t
 
     typedef enum(
@@ -498,7 +515,7 @@ module Idevice
       :UNLOCK,      (8 | 4),
     ), :afc_lock_op_t;
 
-    typedef enum( :SEEK_SET, :SEEK_CUR, :SEEK_END ), :whence_t
+    typedef enum(:SEEK_SET, :SEEK_CUR, :SEEK_END), :whence_t
 
     # afc_error_t afc_client_new(idevice_t device, lockdownd_service_descriptor_t service, afc_client_t *client);
     attach_function :afc_client_new, [Idevice, LockdownServiceDescriptor, :pointer], :afc_error_t
@@ -560,8 +577,7 @@ module Idevice
     # afc_error_t afc_get_device_info_key(afc_client_t client, const char *key, char **value);
     attach_function :afc_get_device_info_key, [AFCClient, :string, :pointer], :afc_error_t
 
-    #afc_error_t afc_client_new_from_house_arrest_client(house_arrest_client_t client, afc_client_t *afc_client);
+    # afc_error_t afc_client_new_from_house_arrest_client(house_arrest_client_t client, afc_client_t *afc_client);
     attach_function :afc_client_new_from_house_arrest_client, [HouseArrestClient, :pointer], :afc_error_t
-
   end
 end

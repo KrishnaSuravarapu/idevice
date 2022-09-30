@@ -80,7 +80,7 @@ module Idevice
     begin
       C.idevice_event_subscribe(cb, nil)
       until finished
-        #nop
+        # nop
       end
     ensure
       C.idevice_event_unsubscribe()
@@ -88,7 +88,7 @@ module Idevice
     nil
   end
 
-  def self.wait_for_device_add(opts={})
+  def self.wait_for_device_add(opts = {})
     udid = opts[:udid]
     if udid
       return if device_list.include?(udid)
@@ -96,7 +96,7 @@ module Idevice
 
     subscribe do |evt|
       if evt == :DEVICE_ADD
-        if udid 
+        if udid
           self.device_list.include?(udid)
         else
           true
@@ -107,7 +107,7 @@ module Idevice
     end
   end
 
-  def self.wait_for_device_remove(opts={})
+  def self.wait_for_device_remove(opts = {})
     udid = opts[:udid]
     if udid
       return unless device_list.include?(udid)
@@ -126,4 +126,3 @@ module Idevice
     end
   end
 end
-

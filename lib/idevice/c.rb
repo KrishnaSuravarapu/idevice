@@ -22,6 +22,7 @@ require "rubygems"
 require 'plist'
 require "ffi"
 require "thread"
+require_relative "../constants"
 
 module FFI
   class MemoryPointer < Pointer
@@ -39,8 +40,8 @@ module FFI
     end
 
     def self.null_terminated_array_of_strings(strs)
-      psize = FFI::MemoryPointer.size * (strs.count+1)
-      pstrs = strs.map{|str| FFI::MemoryPointer.from_string(str) }
+      psize = FFI::MemoryPointer.size * (strs.count + 1)
+      pstrs = strs.map { |str| FFI::MemoryPointer.from_string(str) }
       if block_given?
         new(psize) do |aryp|
           aryp.write_array_of_pointer(pstrs)
@@ -59,12 +60,13 @@ module Idevice
   module LibHelpers
     def self.included(base)
       class << base
-      private
-        def _attach_helper(svcname, opts={})
+        private
+
+        def _attach_helper(svcname, opts = {})
           idevice = opts[:idevice] || Idevice.attach(opts)
           ldsvc = opts[:lockdown_service]
           unless ldsvc
-            ldclient = opts[:lockdown_client] || LockdownClient.attach(opts.merge(idevice:idevice))
+            ldclient = opts[:lockdown_client] || LockdownClient.attach(opts.merge(idevice: idevice))
             ldsvc = ldclient.start_service(svcname)
           end
 
@@ -75,7 +77,7 @@ module Idevice
       end
     end
 
-  private
+    private
 
     def _unbound_list_to_array(p_unbound_list)
       ret = nil
@@ -94,10 +96,9 @@ module Idevice
     def _infolist_to_hash(p_infolist)
       infolist = _unbound_list_to_array(p_infolist)
       if infolist
-        return Hash[ infolist.each_slice(2).to_a.map{|k,v| [k.to_sym, v]} ]
+        return Hash[infolist.each_slice(2).to_a.map { |k, v| [k.to_sym, v] }]
       end
     end
-
   end
 
   module C
@@ -109,6 +110,7 @@ module Idevice
       def initialize(pointer)
         raise NoMethodError, "release() not implemented for class #{self}" unless self.class.respond_to? :release
         raise ArgumentError, "Must supply a pointer to memory" unless pointer
+
         super(pointer, self.class.method(:release))
       end
     end
@@ -126,7 +128,5 @@ module Idevice
     # memory movers
     attach_function :memcpy, [:pointer, :pointer, :size_t], :pointer
     attach_function :bcopy, [:pointer, :pointer, :size_t], :void
-
   end
 end
-

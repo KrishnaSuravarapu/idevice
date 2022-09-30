@@ -37,7 +37,7 @@ module Idevice
 
     # Use this instead of 'new' to attach to an idevice using libimobiledevice
     # and instantiate a new idevice_t handle
-    def self.attach(opts={})
+    def self.attach(opts = {})
       @udid = opts[:udid]
 
       FFI::MemoryPointer.new(:pointer) do |tmpptr|
@@ -60,6 +60,7 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |udid_ptr|
         err = C.idevice_get_udid(self, udid_ptr)
         raise IdeviceLibError, "Idevice error: #{err}" if err != :SUCCESS
+
         unless udid_ptr.read_pointer.null?
           @udid = udid_ptr.read_pointer.read_string
           C.free(udid_ptr.read_pointer)
@@ -73,6 +74,7 @@ module Idevice
       FFI::MemoryPointer.new(:uint32) do |tmpptr|
         err = C.idevice_get_handle(self, tmpptr)
         raise IdeviceLibError, "Idevice error: #{err}" if err != :SUCCESS
+
         return tmpptr.read_uint32
       end
     end
@@ -91,6 +93,7 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |tmpptr|
         err = C.idevice_connect(idevice, port, tmpptr)
         raise IdeviceLibError, "Idevice error: #{err}" if err != :SUCCESS
+
         idev_connection = tmpptr.read_pointer
         if idev_connection.null?
           raise IdeviceLibError, "idevice_connect returned a null idevice_connection_t"
@@ -103,6 +106,7 @@ module Idevice
     def disconnect
       err = C.idevice_disconnect(self)
       raise IdeviceLibError, "Idevice error: #{err}" if err != :SUCCESS
+
       @_disconnected = true
       nil
     end
@@ -121,8 +125,10 @@ module Idevice
           begin
             err = C.idevice_connection_send(self, data_ptr, data_ptr.size, sent_bytes)
             raise IdeviceLibError, "Idevice error: #{err}" if err != :SUCCESS
+
             sent = sent_bytes.read_uint32
             break if sent == 0
+
             data_ptr += sent
           end while data_ptr.size > 0
         end
@@ -134,15 +140,16 @@ module Idevice
     DEFAULT_RECV_CHUNKSZ = 8192
 
     # blocking read - optionally yields to a block with each chunk read
-    def receive_all(timeout=nil, chunksz=nil)
+    def receive_all(timeout = nil, chunksz = nil)
       timeout ||= DEFAULT_RECV_TIMEOUT
       chunksz ||= DEFAULT_RECV_CHUNKSZ
       recvdata = StringIO.new unless block_given?
 
       FFI::MemoryPointer.new(chunksz) do |data_ptr|
         FFI::MemoryPointer.new(:uint32) do |recv_bytes|
-          while (ierr=C.idevice_connection_receive_timeout(self, data_ptr, data_ptr.size, recv_bytes, timeout)) == :SUCCESS
-            chunk = data_ptr.read_bytes(recv_bytes.read_uint32) 
+          while (ierr = C.idevice_connection_receive_timeout(self, data_ptr, data_ptr.size, recv_bytes,
+                                                             timeout)) == :SUCCESS
+            chunk = data_ptr.read_bytes(recv_bytes.read_uint32)
             if block_given?
               yield chunk
             else
@@ -159,7 +166,7 @@ module Idevice
     end
 
     # read up to maxlen bytes
-    def receive_data(maxlen, timeout=nil)
+    def receive_data(maxlen, timeout = nil)
       timeout ||= DEFAULT_RECV_TIMEOUT
       recvdata = StringIO.new
 
@@ -168,6 +175,7 @@ module Idevice
           # one-shot, read up to max-len and we're done
           err = C.idevice_connection_receive_timeout(self, data_ptr, data_ptr.size, recv_bytes, timeout)
           raise IdeviceLibError, "Idevice error: #{err}" if err != :SUCCESS
+
           recvdata << data_ptr.read_bytes(recv_bytes.read_uint32)
         end
       end
@@ -175,31 +183,30 @@ module Idevice
     end
 
     def send_lockdown_message(msg)
-        dat = msg.to_plist
-        send_data([dat.bytesize].pack("N") << dat)
+      dat = msg.to_plist
+      send_data([dat.bytesize].pack("N") << dat)
     end
 
     def receive_lockdown_message
-        len = receive_data(4).unpack("N").first
-        dat = receive_data(len)
-        case dat[0,6]
-        when "<?xml "
-            return Plist.parse_xml(dat)
-        when "bplist"
-            return Plist.parse_binary(dat)
-        else
-            # just return raw data if this appears as something else
-            return dat
-        end
+      len = receive_data(4).unpack("N").first
+      dat = receive_data(len)
+      case dat[0, 6]
+      when "<?xml "
+        return Plist.parse_xml(dat)
+      when "bplist"
+        return Plist.parse_binary(dat)
+      else
+        # just return raw data if this appears as something else
+        return dat
+      end
     end
-
   end
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS,               0,
+      :SUCCESS, 0,
       :INVALID_ARG,          -1,
       :UNKNOWN_ERROR,        -2,
       :NO_DEVICE,            -3,
@@ -234,7 +241,8 @@ module Idevice
 
     # communication
     attach_function :idevice_connection_send, [IdeviceConnection, :pointer, :uint32, :pointer], :idevice_error_t
-    attach_function :idevice_connection_receive_timeout, [IdeviceConnection, :pointer, :uint32, :pointer, :uint], :idevice_error_t
+    attach_function :idevice_connection_receive_timeout, [IdeviceConnection, :pointer, :uint32, :pointer, :uint],
+                    :idevice_error_t
     attach_function :idevice_connection_receive, [IdeviceConnection, :pointer, :uint32, :pointer], :idevice_error_t
 
     # misc

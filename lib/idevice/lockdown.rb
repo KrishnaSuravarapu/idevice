@@ -28,7 +28,6 @@ module Idevice
 
   # Used to manage device preferences, start services, pairing and activation on the device.
   class LockdownClient < C::ManagedOpaquePointer
-
     def self.release(ptr)
       C::Freelock.synchronize do
         unless ptr.null?
@@ -37,7 +36,7 @@ module Idevice
       end
     end
 
-    def self.attach(opts={})
+    def self.attach(opts = {})
       idevice = opts[:idevice] || Idevice.attach(opts)
 
       label = opts[:label] || "ruby-idevice"
@@ -101,7 +100,7 @@ module Idevice
           sync_classes = p_sync_classes.read_pointer
           count = p_count.read_int
           unless sync_classes.null?
-            res = sync_classes.read_array_of_pointer(count).map{|p| p.read_string }
+            res = sync_classes.read_array_of_pointer(count).map { |p| p.read_string }
             err = C.lockdownd_data_classes_free(sync_classes)
             raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
           end
@@ -128,11 +127,11 @@ module Idevice
       FFI::MemoryPointer.new(:pointer) do |p_val|
         err = C.lockdownd_get_value(self, domain, key, p_val)
         if err == :SUCCESS
-            res = p_val.read_pointer.read_plist_t
+          res = p_val.read_pointer.read_plist_t
         elsif err == :UNKNOWN_ERROR
-            res = nil
+          res = nil
         else
-            raise LockdownError, "Lockdownd error: #{err}"
+          raise LockdownError, "Lockdownd error: #{err}"
         end
       end
       return res
@@ -141,12 +140,14 @@ module Idevice
     def set_value(domain, key, value)
       err = C.lockdownd_set_value(self, domain, key, Plist_t_Unmanaged.from_ruby(value))
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def remove_value(domain, key)
       err = C.lockdownd_remove_value(self, domain, key)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
@@ -184,46 +185,56 @@ module Idevice
 
     def pair(pair_record)
       raise TypeError, "pair_record must be a LockdownPairRecord" unless pair_record.is_a?(LockdownPairRecord)
+
       err = C.lockdownd_pair(self, pair_record)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def validate_pair(pair_record)
       raise TypeError, "pair_record must be a LockdownPairRecord" unless pair_record.is_a?(LockdownPairRecord)
+
       err = C.lockdownd_validate_pair(self, pair_record)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def unpair(pair_record)
       raise TypeError, "pair_record must be a LockdownPairRecord" unless pair_record.is_a?(LockdownPairRecord)
+
       err = C.lockdownd_unpair(self, pair_record)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def activate(activation_record)
       err = C.lockdownd_activate(self, Plist_t.from_ruby(activation_record))
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def deactivate
       err = C.lockdownd_deactivate(self)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def enter_recovery
       err = C.lockdownd_enter_recovery(self)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
     def goodbye
       err = C.lockdownd_goodbye(self)
       raise LockdownError, "Lockdownd error: #{err}" if err != :SUCCESS
+
       return true
     end
 
@@ -254,106 +265,106 @@ module Idevice
   end
 
   module C
-    ffi_lib 'imobiledevice'
+    ffi_lib LIBIMOBILEDYLIB
 
     typedef enum(
-      :SUCCESS                  ,  0,
-      :INVALID_ARG              , -1,
-      :INVALID_CONF             , -2,
-      :PLIST_ERROR              , -3,
-      :PAIRING_FAILED           , -4,
-      :SSL_ERROR                , -5,
-      :DICT_ERROR               , -6,
-      :START_SERVICE_FAILED     , -7,
-      :NOT_ENOUGH_DATA          , -8,
-      :SET_VALUE_PROHIBITED     , -9,
-      :GET_VALUE_PROHIBITED     ,-10,
-      :REMOVE_VALUE_PROHIBITED  ,-11,
-      :MUX_ERROR                ,-12,
-      :ACTIVATION_FAILED        ,-13,
-      :PASSWORD_PROTECTED       ,-14,
-      :NO_RUNNING_SESSION       ,-15,
-      :INVALID_HOST_ID          ,-16,
-      :INVALID_SERVICE          ,-17,
-      :INVALID_ACTIVATION_RECORD,-18,
-      :UNKNOWN_ERROR            ,-256,
+      :SUCCESS, 0,
+      :INVALID_ARG, -1,
+      :INVALID_CONF, -2,
+      :PLIST_ERROR, -3,
+      :PAIRING_FAILED, -4,
+      :SSL_ERROR, -5,
+      :DICT_ERROR, -6,
+      :START_SERVICE_FAILED, -7,
+      :NOT_ENOUGH_DATA, -8,
+      :SET_VALUE_PROHIBITED, -9,
+      :GET_VALUE_PROHIBITED, -10,
+      :REMOVE_VALUE_PROHIBITED, -11,
+      :MUX_ERROR, -12,
+      :ACTIVATION_FAILED, -13,
+      :PASSWORD_PROTECTED, -14,
+      :NO_RUNNING_SESSION, -15,
+      :INVALID_HOST_ID, -16,
+      :INVALID_SERVICE, -17,
+      :INVALID_ACTIVATION_RECORD, -18,
+      :UNKNOWN_ERROR, -256,
     ), :lockdownd_error_t
 
     typedef :pointer, :lockdownd_client_t
 
-    #lockdownd_error_t lockdownd_client_new(idevice_t device, lockdownd_client_t *client, const char *label);
+    # lockdownd_error_t lockdownd_client_new(idevice_t device, lockdownd_client_t *client, const char *label);
     attach_function :lockdownd_client_new, [Idevice, :pointer, :string], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_client_new_with_handshake(idevice_t device, lockdownd_client_t *client, const char *label);
+    # lockdownd_error_t lockdownd_client_new_with_handshake(idevice_t device, lockdownd_client_t *client, const char *label);
     attach_function :lockdownd_client_new_with_handshake, [Idevice, :pointer, :string], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_client_free(lockdownd_client_t client);
+    # lockdownd_error_t lockdownd_client_free(lockdownd_client_t client);
     attach_function :lockdownd_client_free, [LockdownClient], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_query_type(lockdownd_client_t client, char **type);
+    # lockdownd_error_t lockdownd_query_type(lockdownd_client_t client, char **type);
     attach_function :lockdownd_query_type, [LockdownClient, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_get_value(lockdownd_client_t client, const char *domain, const char *key, plist_t *value);
+    # lockdownd_error_t lockdownd_get_value(lockdownd_client_t client, const char *domain, const char *key, plist_t *value);
     attach_function :lockdownd_get_value, [LockdownClient, :string, :string, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_set_value(lockdownd_client_t client, const char *domain, const char *key, plist_t value);
+    # lockdownd_error_t lockdownd_set_value(lockdownd_client_t client, const char *domain, const char *key, plist_t value);
     attach_function :lockdownd_set_value, [LockdownClient, :string, :string, Plist_t], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_remove_value(lockdownd_client_t client, const char *domain, const char *key);
+    # lockdownd_error_t lockdownd_remove_value(lockdownd_client_t client, const char *domain, const char *key);
     attach_function :lockdownd_remove_value, [LockdownClient, :string, :string], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_start_service(lockdownd_client_t client, const char *identifier, lockdownd_service_descriptor_t *service);
+    # lockdownd_error_t lockdownd_start_service(lockdownd_client_t client, const char *identifier, lockdownd_service_descriptor_t *service);
     attach_function :lockdownd_start_service, [LockdownClient, :string, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_start_session(lockdownd_client_t client, const char *host_id, char **session_id, int *ssl_enabled);
+    # lockdownd_error_t lockdownd_start_session(lockdownd_client_t client, const char *host_id, char **session_id, int *ssl_enabled);
     attach_function :lockdownd_start_session, [LockdownClient, :string, :pointer, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_stop_session(lockdownd_client_t client, const char *session_id);
+    # lockdownd_error_t lockdownd_stop_session(lockdownd_client_t client, const char *session_id);
     attach_function :lockdownd_stop_session, [LockdownClient, :string], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_send(lockdownd_client_t client, plist_t plist);
+    # lockdownd_error_t lockdownd_send(lockdownd_client_t client, plist_t plist);
     attach_function :lockdownd_send, [LockdownClient, Plist_t], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_receive(lockdownd_client_t client, plist_t *plist);
+    # lockdownd_error_t lockdownd_receive(lockdownd_client_t client, plist_t *plist);
     attach_function :lockdownd_receive, [LockdownClient, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_pair(lockdownd_client_t client, lockdownd_pair_record_t pair_record);
+    # lockdownd_error_t lockdownd_pair(lockdownd_client_t client, lockdownd_pair_record_t pair_record);
     attach_function :lockdownd_pair, [LockdownClient, LockdownPairRecord], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_validate_pair(lockdownd_client_t client, lockdownd_pair_record_t pair_record);
+    # lockdownd_error_t lockdownd_validate_pair(lockdownd_client_t client, lockdownd_pair_record_t pair_record);
     attach_function :lockdownd_validate_pair, [LockdownClient, LockdownPairRecord], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_unpair(lockdownd_client_t client, lockdownd_pair_record_t pair_record);
+    # lockdownd_error_t lockdownd_unpair(lockdownd_client_t client, lockdownd_pair_record_t pair_record);
     attach_function :lockdownd_unpair, [LockdownClient, LockdownPairRecord], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_activate(lockdownd_client_t client, plist_t activation_record);
+    # lockdownd_error_t lockdownd_activate(lockdownd_client_t client, plist_t activation_record);
     attach_function :lockdownd_activate, [LockdownClient, Plist_t], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_deactivate(lockdownd_client_t client);
+    # lockdownd_error_t lockdownd_deactivate(lockdownd_client_t client);
     attach_function :lockdownd_deactivate, [LockdownClient], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_enter_recovery(lockdownd_client_t client);
+    # lockdownd_error_t lockdownd_enter_recovery(lockdownd_client_t client);
     attach_function :lockdownd_enter_recovery, [LockdownClient], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_goodbye(lockdownd_client_t client);
+    # lockdownd_error_t lockdownd_goodbye(lockdownd_client_t client);
     attach_function :lockdownd_goodbye, [LockdownClient], :lockdownd_error_t
 
-    #void lockdownd_client_set_label(lockdownd_client_t client, const char *label);
+    # void lockdownd_client_set_label(lockdownd_client_t client, const char *label);
     attach_function :lockdownd_client_set_label, [LockdownClient, :string], :void
 
-    #lockdownd_error_t lockdownd_get_device_udid(lockdownd_client_t control, char **udid);
+    # lockdownd_error_t lockdownd_get_device_udid(lockdownd_client_t control, char **udid);
     attach_function :lockdownd_get_device_udid, [LockdownClient, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_get_device_name(lockdownd_client_t client, char **device_name);
+    # lockdownd_error_t lockdownd_get_device_name(lockdownd_client_t client, char **device_name);
     attach_function :lockdownd_get_device_name, [LockdownClient, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_get_sync_data_classes(lockdownd_client_t client, char ***classes, int *count);
+    # lockdownd_error_t lockdownd_get_sync_data_classes(lockdownd_client_t client, char ***classes, int *count);
     attach_function :lockdownd_get_sync_data_classes, [LockdownClient, :pointer, :pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_data_classes_free(char **classes);
+    # lockdownd_error_t lockdownd_data_classes_free(char **classes);
     attach_function :lockdownd_data_classes_free, [:pointer], :lockdownd_error_t
 
-    #lockdownd_error_t lockdownd_service_descriptor_free(lockdownd_service_descriptor_t service);
+    # lockdownd_error_t lockdownd_service_descriptor_free(lockdownd_service_descriptor_t service);
     attach_function :lockdownd_service_descriptor_free, [LockdownServiceDescriptor], :lockdownd_error_t
   end
 end
