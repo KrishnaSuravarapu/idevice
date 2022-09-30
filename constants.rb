@@ -1,11 +1,9 @@
 def get_libimobile_dylib
-  puts "Hey Harshit"
-  `otool -L /usr/local/bin/idevice_id | grep -m 1 'libimobiledevice'`.strip().split[0]
+  `otool -L /usr/local/bin/idevice_id | grep -m 1 'libplist.*dylib' | awk '{print $1}'`
 end
 
 def get_libplist_dylib
-  puts "Hey Krishna"
-  `otool -L /usr/local/bin/idevice_id | grep -m 1 'libplist'`.strip().split[0]
+  `otool -L /usr/local/bin/idevice_id | grep -m 1 'libimobiledevice.*dylib' | awk '{print $1}'`
 end
 
 LIBIMOBILEDYLIB = get_libimobile_dylib.freeze
