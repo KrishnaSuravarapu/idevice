@@ -22,7 +22,6 @@ require "rubygems"
 require 'plist'
 require "ffi"
 require "thread"
-require_relative "../../constants"
 
 module FFI
   class MemoryPointer < Pointer

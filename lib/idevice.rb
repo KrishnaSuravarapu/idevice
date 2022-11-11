@@ -41,6 +41,7 @@ require 'idevice/restore'
 require 'idevice/sbservices'
 require 'idevice/screenshotr'
 require 'idevice/webinspector'
+require 'idevice/property_list_service'
 
 module Idevice
   def self.debug_level= num
