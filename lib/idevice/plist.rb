@@ -190,7 +190,7 @@ module Idevice
   end
 
   module C
-    ffi_lib LIBPLISTDYLIB
+    ffi_lib 'plist'
 
     # PLIST_API plist_t plist_new_dict(void);
     attach_function :plist_new_dict, [], :pointer

@@ -265,7 +265,7 @@ module Idevice
   end
 
   module C
-    ffi_lib LIBIMOBILEDYLIB
+    ffi_lib 'imobiledevice'
 
     typedef enum(
       :SUCCESS, 0,
